@@ -84,6 +84,9 @@ async def main() -> None:
     print(f"main() -> Research Question: {args.question}")
     ###
 
+    google_search_tool = google_search_tool  
+    fetch_webpage_tool = fetch_webpage_tool 
+
     # (Prommin - Modify) Add
     if args.forced_google_search_params:
         async def forced_google_search(
