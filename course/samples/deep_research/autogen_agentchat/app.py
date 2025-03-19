@@ -112,8 +112,8 @@ async def main() -> None:
                 **forced_params  # Ensuring these parameters are applied every time
             )
 
-            # Register FunctionTool
-        forced_google_search_tool = FunctionTool(
+            # Register Forced FunctionTool
+        google_search_tool = FunctionTool(
             func=forced_google_search,
             description="""
             Perform Google searches with enforced num_results=2 and content_max_length=5000.
@@ -150,7 +150,7 @@ async def main() -> None:
                     **fetch_forced_params  # Ensuring these parameters are applied every time
                 )
 
-            forced_fetch_webpage_tool = FunctionTool(
+            fetch_webpage_tool = FunctionTool(
                 func=forced_fetch_webpage,
                 description="Fetch a webpage and convert it to markdown format, with options for including images and limiting length",
                 global_imports=[
