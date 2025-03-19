@@ -8,30 +8,20 @@ from autogen_core.code_executor import ImportFromModule
 from autogen_core.tools import FunctionTool
 import argparse
 
-# Argument parser for search configuration (optional if set via env vars)
-parser = argparse.ArgumentParser(description="Google Search Configuration")
-parser.add_argument("--GOOGLE_SEARCH_NUM_RESULTS", type=int, default=int(os.environ.get("GOOGLE_SEARCH_NUM_RESULTS", 5)))
-parser.add_argument("--GOOGLE_SEARCH_INCLUDE_SNIPPETS", type=bool, default=os.environ.get("GOOGLE_SEARCH_INCLUDE_SNIPPETS", "True") == "True")
-parser.add_argument("--GOOGLE_SEARCH_INCLUDE_CONTENT", type=bool, default=os.environ.get("GOOGLE_SEARCH_INCLUDE_CONTENT", "True") == "True")
-parser.add_argument("--GOOGLE_SEARCH_CONTENT_MAX_LENGTH", type=int, default=int(os.environ.get("GOOGLE_SEARCH_CONTENT_MAX_LENGTH", 15000)))
-parser.add_argument("--GOOGLE_SEARCH_LANGUAGE", type=str, default=os.environ.get("GOOGLE_SEARCH_LANGUAGE", "en"))
-parser.add_argument("--GOOGLE_SEARCH_COUNTRY", type=str, default=os.environ.get("GOOGLE_SEARCH_COUNTRY", None))
-parser.add_argument("--GOOGLE_SEARCH_SAFE_SEARCH", type=bool, default=os.environ.get("GOOGLE_SEARCH_SAFE_SEARCH", "True") == "True")
 
-args, _ = parser.parse_known_args()
 
 
 async def google_search(
     query: str,
-    num_results: int = args.GOOGLE_SEARCH_NUM_RESULTS,
-    include_snippets: bool = args.GOOGLE_SEARCH_INCLUDE_SNIPPETS,
-    include_content: bool = args.GOOGLE_SEARCH_INCLUDE_CONTENT,
-    content_max_length: Optional[int] = args.GOOGLE_SEARCH_CONTENT_MAX_LENGTH,
-    language: str = args.GOOGLE_SEARCH_LANGUAGE,
-    country: Optional[str] = args.GOOGLE_SEARCH_COUNTRY,
-    safe_search: bool = args.GOOGLE_SEARCH_SAFE_SEARCH
+    num_results: int = 5,
+    include_snippets: bool = True,
+    include_content: bool = True,
+    content_max_length: Optional[int] = 15000,
+    language: str = 'en',
+    country: Optional[str] = None,
+    safe_search: bool = True
 ) -> List[Dict[str, str]]:
-
+    content_max_length = 10
     ### Print Before Performing Google Search
     print("google_search()")
     print(f"-> query: {query}")

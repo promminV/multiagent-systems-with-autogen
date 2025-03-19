@@ -8,15 +8,11 @@ import html2text
 from urllib.parse import urljoin 
 import argparse
 
-parser = argparse.ArgumentParser(description="Configure webpage fetching parameters.")
-parser.add_argument("--FETCH_INCLUDE_IMAGES", type=bool, default=True, help="Include image URLs in the extracted content (default: True).")
-parser.add_argument("--FETCH_MAX_LENGTH", type=int, default=None, help="Maximum length of extracted content (default: None).")
-args, _ = parser.parse_known_args()  # Allow arguments from other modules
 
 async def fetch_webpage(
     url: str,
-    include_images: bool = args.FETCH_INCLUDE_IMAGES,
-    max_length: Optional[int] = args.FETCH_MAX_LENGTH,
+    include_images: bool = True,
+    max_length: Optional[int] = None,
     headers: Optional[Dict[str, str]] = None
 ) -> str:
 

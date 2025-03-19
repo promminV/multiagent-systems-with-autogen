@@ -11,14 +11,15 @@ from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermi
 from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.ui import Console
 from autogen_ext.models.openai import OpenAIChatCompletionClient
+from autogen_agentchat.tools import FunctionTool
+from typing import List, Dict, Optional
 
 # Import the google_search_tool from your implementation
-from google_search import google_search_tool
-from fetch_webpage import fetch_webpage_tool
+from google_search import google_search, google_search_tool
+from fetch_webpage import fetch_webpage, fetch_webpage_tool
  
 import argparse
 import os
-
 import logging
 
 from autogen_core import TRACE_LOGGER_NAME
@@ -28,39 +29,147 @@ logger = logging.getLogger(TRACE_LOGGER_NAME)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
+def str_to_bool(value):
+    return value.lower() in ("true", "1", "yes")
+
+parser = argparse.ArgumentParser(description="Configuration")
+parser.add_argument("--forced_google_search_params", type=bool, default=str_to_bool(os.environ.get("forced_google_search_params", "false")))
+parser.add_argument("--forced_fetch_webpage_params", type=bool, default=str_to_bool(os.environ.get("forced_fetch_webpage", "false")))
+
+parser.add_argument("--GOOGLE_SEARCH_NUM_RESULTS", type=int, default=int(os.environ.get("GOOGLE_SEARCH_NUM_RESULTS", 5)))
+parser.add_argument("--GOOGLE_SEARCH_INCLUDE_SNIPPETS", type=bool, default=str_to_bool(os.environ.get("GOOGLE_SEARCH_INCLUDE_SNIPPETS", "true")))
+parser.add_argument("--GOOGLE_SEARCH_INCLUDE_CONTENT", type=bool, default=str_to_bool(os.environ.get("GOOGLE_SEARCH_INCLUDE_CONTENT", "true")))
+parser.add_argument("--GOOGLE_SEARCH_CONTENT_MAX_LENGTH", type=int, default=int(os.environ.get("GOOGLE_SEARCH_CONTENT_MAX_LENGTH", 15000)))
+parser.add_argument("--GOOGLE_SEARCH_LANGUAGE", type=str, default=os.environ.get("GOOGLE_SEARCH_LANGUAGE", "en"))
+parser.add_argument("--GOOGLE_SEARCH_COUNTRY", type=str, default=os.environ.get("GOOGLE_SEARCH_COUNTRY", None))
+parser.add_argument("--GOOGLE_SEARCH_SAFE_SEARCH", type=bool, default=str_to_bool(os.environ.get("GOOGLE_SEARCH_SAFE_SEARCH", "true")))
+
+parser.add_argument("--FETCH_INCLUDE_IMAGES", type=bool, default=True)
+parser.add_argument("--FETCH_MAX_LENGTH", type=int, default=None)
+
+parser.add_argument("--model", type=str, default="gpt-4o")
+parser.add_argument("--question", type=str)
+
+args = parser.parse_args()
+
 async def main() -> None:
     print("main() -> started...")  # Track when main starts
 
     # Initialize the model client
-    parser = argparse.ArgumentParser(description="Run an AI-powered research assistant with a selectable model.")
-    parser.add_argument("--model", type=str, default="gpt-4o", help="Specify the model to use (default: gpt-4o)")
-    parser.add_argument("--question",type=str)
-    args = parser.parse_args()
+
 
     ### Model Selection Confirmation
     print(f"main() -> Using model: {args.model}")
     ###
 
     if args.model == "deepseek-chat":
-      model_client = OpenAIChatCompletionClient(
+        model_client = OpenAIChatCompletionClient(
             model="deepseek-chat",
             base_url="https://api.deepseek.com",
             api_key=os.getenv("DeepSeek_API_KEY"),
             model_capabilities={
                 "vision": True,
-                "function_calling": True, # function calling = tools (autogen)
+                "function_calling": True,
                 "json_output": True,
             },
         )
-
-    if args.model == "gpt-4o":
-      model_client = OpenAIChatCompletionClient(
-        model="gpt-4o", 
-      )
+    elif args.model == "gpt-4o":
+        model_client = OpenAIChatCompletionClient(
+            model="gpt-4o", 
+        )
+    else:
+        raise ValueError(f"Unsupported model: {args.model}")
 
     ### Research Question Input
     print(f"main() -> Research Question: {args.question}")
     ###
+
+    # (Prommin - Modify) Add
+    if args.forced_google_search_params:
+        async def forced_google_search(
+            query: str,
+            include_snippets: bool = True,  # LLM can decide
+            include_content: bool = True,  # LLM can decide
+            country: Optional[str] = None,
+            language: str = "en",
+            safe_search = True
+        ) -> List[Dict[str, str]]:
+            """Google Search with num_results=2 and content_max_length=5000 forced on every execution."""
+
+            # Explicitly enforce values before calling google_search
+            forced_params = {
+                "num_results": args.GOOGLE_SEARCH_NUM_RESULTS,
+                "content_max_length": args.GOOGLE_SEARCH_CONTENT_MAX_LENGTH,
+            }
+
+            return await google_search(
+                query=query,
+                include_snippets=include_snippets,  # LLM-controlled
+                include_content=include_content,  # LLM-controlled
+                language=language,
+                country=country,
+                safe_search=safe_search,
+                **forced_params  # Ensuring these parameters are applied every time
+            )
+
+            # Register FunctionTool
+        forced_google_search_tool = FunctionTool(
+            func=forced_google_search,
+            description="""
+            Perform Google searches with enforced num_results=2 and content_max_length=5000.
+            LLM can choose whether to include snippets and webpage content.
+            """,
+            global_imports=[
+                ImportFromModule("typing", ["List", "Dict", "Optional"]),
+                "os",
+                "requests",
+                "html2text",
+                ImportFromModule("bs4", ["BeautifulSoup"]),
+                ImportFromModule("urllib.parse", ["urljoin"])
+            ]
+        )
+        
+        if args.forced_fetch_webpage_params:
+            async def forced_fetch_webpage(
+                url: str,
+                include_images: bool = args.FETCH_INCLUDE_IMAGES,
+                max_length: Optional[int] = args.FETCH_MAX_LENGTH,
+                headers: Optional[Dict[str, str]] = None
+            ) -> str:
+                # Explicitly enforce values before calling google_search
+                fetch_forced_params = {
+                    "include_images": args.FETCH_INCLUDE_IMAGES,
+                    "max_length": args.FETCH_MAX_LENGTH,
+                }
+
+                return await fetch_webpage(
+                    url=url,
+                    headers=headers,  # LLM-controlled
+                    **fetch_forced_params  # Ensuring these parameters are applied every time
+                )
+
+            forced_fetch_webpage_tool = FunctionTool(
+                func=forced_fetch_webpage,
+                description="Fetch a webpage and convert it to markdown format, with options for including images and limiting length",
+                global_imports=[
+                    "os",
+                    "html2text",
+                    ImportFromModule("typing", ("Optional", "Dict")),
+                    "requests",
+                    ImportFromModule("bs4", ("BeautifulSoup",)),
+                    ImportFromModule("html2text", ("HTML2Text",)),
+                    ImportFromModule("urllib.parse", ("urljoin",))
+                ]
+            )
+
+        
+        
+        google_search_tool = forced_google_search_tool
+        fetch_webpage_tool = forced_fetch_webpage_tool
+
+            #####
+
+
 
     # Create the Research Assistant agent
     research_assistant = AssistantAgent(
@@ -146,6 +255,7 @@ async def main() -> None:
 
 
     print("main() -> Running team chat stream...")
+    #await Console(team.run_stream(task=task))
     await Console(team.run_stream(task=task))
     print("main() -> Finished team chat stream.")
 
