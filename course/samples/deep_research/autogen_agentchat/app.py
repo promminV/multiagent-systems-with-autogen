@@ -11,7 +11,7 @@ from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermi
 from autogen_agentchat.teams import SelectorGroupChat
 from autogen_agentchat.ui import Console
 from autogen_ext.models.openai import OpenAIChatCompletionClient
-from autogen_agentchat.tools import FunctionTool
+from autogen_core.tools import FunctionTool
 from typing import List, Dict, Optional
 
 # Import the google_search_tool from your implementation
