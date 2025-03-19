@@ -21,7 +21,19 @@ async def google_search(
     country: Optional[str] = None,
     safe_search: bool = True
 ) -> List[Dict[str, str]]:
-
+    content_max_length = 10
+    ### Print Before Performing Google Search
+    print("google_search()")
+    print(f"-> query: {query}")
+    print(f"-> num_results: {num_results}")
+    print(f"-> include_snippets: {include_snippets}")
+    print(f"-> include_content: {include_content}")
+    print(f"-> content_max_length: {content_max_length}")
+    print(f"-> language: {language}")
+    print(f"-> country: {language}")
+    print(f"-> safe search: {safe_search}")
+    print("----------------------------")
+    ###
 
     """
     Perform a Google search using the Custom Search API and optionally fetch webpage content.
@@ -53,23 +65,6 @@ async def google_search(
     
     num_results = min(max(1, num_results), 10) # maximum = 10 
 
-    ####### Modified (Prommin) ########
-    num_results = 1
-    content_max_length = 10000
-    print("google_search()")
-    print(f"-> query: {query}")
-    print(f"-> num_results: {num_results}")
-    print(f"-> include_snippets: {include_snippets}")
-    print(f"-> include_content: {include_content}")
-    print(f"-> content_max_length: {content_max_length}")
-    print(f"-> language: {language}")
-    print(f"-> country: {language}")
-    print(f"-> safe search: {safe_search}")
-    print("----------------------------")
-    ###
-    ###################################
-
-
     async def fetch_page_content(url: str, max_length: Optional[int] = 50000) -> str:
     
         print(f"google_search() \
@@ -79,11 +74,7 @@ async def google_search(
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
-
-        ####### Modified (Prommin) ########
-        max_length = 10000
-        ###################################
-
+        
         try:
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()

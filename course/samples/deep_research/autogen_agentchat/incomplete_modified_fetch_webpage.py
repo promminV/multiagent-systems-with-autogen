@@ -6,6 +6,7 @@ from autogen_core.tools import FunctionTool
 from bs4 import BeautifulSoup
 import html2text
 from urllib.parse import urljoin 
+import argparse
 
 
 async def fetch_webpage(
@@ -14,6 +15,16 @@ async def fetch_webpage(
     max_length: Optional[int] = None,
     headers: Optional[Dict[str, str]] = None
 ) -> str:
+
+    ### Print Before Performing Google Search
+    print(">>> fetch_webpage()")
+    print(f"url: {url}")
+    print(f"include_images: {include_images}")
+    print(f"max_length: {max_length}")
+    print(f"headers: {headers}")
+    print("----------------------------")
+    ###
+
     """Fetch a webpage and convert it to markdown format.
     
     Args:
@@ -29,11 +40,6 @@ async def fetch_webpage(
         ValueError: If the URL is invalid or the page can't be fetched
     """
     # Use default headers if none provided
-
-    ####### Modified (Prommin) ########
-    max_length = 10000
-    ###################################
-
     if headers is None:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
