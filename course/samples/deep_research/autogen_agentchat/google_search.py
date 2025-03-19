@@ -6,19 +6,45 @@ import html2text
 from urllib.parse import urljoin
 from autogen_core.code_executor import ImportFromModule
 from autogen_core.tools import FunctionTool
+import argparse
 
+# Argument parser for search configuration (optional if set via env vars)
+parser = argparse.ArgumentParser(description="Google Search Configuration")
+parser.add_argument("--GOOGLE_SEARCH_NUM_RESULTS", type=int, default=int(os.environ.get("GOOGLE_SEARCH_NUM_RESULTS", 5)))
+parser.add_argument("--GOOGLE_SEARCH_INCLUDE_SNIPPETS", type=bool, default=os.environ.get("GOOGLE_SEARCH_INCLUDE_SNIPPETS", "True") == "True")
+parser.add_argument("--GOOGLE_SEARCH_INCLUDE_CONTENT", type=bool, default=os.environ.get("GOOGLE_SEARCH_INCLUDE_CONTENT", "True") == "True")
+parser.add_argument("--GOOGLE_SEARCH_CONTENT_MAX_LENGTH", type=int, default=int(os.environ.get("GOOGLE_SEARCH_CONTENT_MAX_LENGTH", 15000)))
+parser.add_argument("--GOOGLE_SEARCH_LANGUAGE", type=str, default=os.environ.get("GOOGLE_SEARCH_LANGUAGE", "en"))
+parser.add_argument("--GOOGLE_SEARCH_COUNTRY", type=str, default=os.environ.get("GOOGLE_SEARCH_COUNTRY", None))
+parser.add_argument("--GOOGLE_SEARCH_SAFE_SEARCH", type=bool, default=os.environ.get("GOOGLE_SEARCH_SAFE_SEARCH", "True") == "True")
+
+args, _ = parser.parse_known_args()
 
 
 async def google_search(
     query: str,
-    num_results: int = 5,
-    include_snippets: bool = True,
-    include_content: bool = True,
-    content_max_length: Optional[int] = 15000,
-    language: str = 'en',
-    country: Optional[str] = None,
-    safe_search: bool = True
+    num_results: int = args.GOOGLE_SEARCH_NUM_RESULTS,
+    include_snippets: bool = args.GOOGLE_SEARCH_INCLUDE_SNIPPETS,
+    include_content: bool = args.GOOGLE_SEARCH_INCLUDE_CONTENT,
+    content_max_length: Optional[int] = args.GOOGLE_SEARCH_CONTENT_MAX_LENGTH,
+    language: str = args.GOOGLE_SEARCH_LANGUAGE,
+    country: Optional[str] = args.GOOGLE_SEARCH_COUNTRY,
+    safe_search: bool = args.GOOGLE_SEARCH_SAFE_SEARCH
 ) -> List[Dict[str, str]]:
+
+    ### Print Before Performing Google Search
+    print("google_search()")
+    print(f"-> query: {query}")
+    print(f"-> num_results: {num_results}")
+    print(f"-> include_snippets: {include_snippets}")
+    print(f"-> include_content: {include_content}")
+    print(f"-> content_max_length: {content_max_length}")
+    print(f"-> language: {language}")
+    print(f"-> country: {language}")
+    print(f"-> safe search: {safe_search}")
+    print("----------------------------")
+    ###
+
     """
     Perform a Google search using the Custom Search API and optionally fetch webpage content.
     
@@ -47,9 +73,13 @@ async def google_search(
             "Missing required environment variables. Please set GOOGLE_API_KEY and GOOGLE_CSE_ID."
         )
     
-    num_results = min(max(1, num_results), 10)
+    num_results = min(max(1, num_results), 10) # maximum = 10 
 
     async def fetch_page_content(url: str, max_length: Optional[int] = 50000) -> str:
+    
+        print(f"google_search() \
+                -> fetch_page_content() -> Fetching content from URL: {url}")
+      
         """Helper function to fetch and convert webpage content to markdown"""
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -83,10 +113,17 @@ async def google_search(
             
             if max_length and len(markdown) > max_length:
                 markdown = markdown[:max_length] + "\n...(truncated)"
-                
+
+            print(f"google_search() \
+                    -> fetch_page_content() -> Successfully fetched content from {url} (length: {len(markdown)})")
+    
             return markdown.strip()
             
         except Exception as e:
+            ### Print If Content Fetching Fails
+            print(f"google_search() \
+                    -> fetch_page_content() -> Failed to fetch content for {url}: {str(e)}")
+            ###
             return f"Error fetching content: {str(e)}"
 
 
@@ -104,6 +141,7 @@ async def google_search(
         params['gl'] = country
     
     try:
+        print('google_search() -> start request to google api...')
         response = requests.get(
             'https://www.googleapis.com/customsearch/v1',
             params=params,
@@ -111,10 +149,17 @@ async def google_search(
         )
         response.raise_for_status()
         data = response.json()
+
+        print(f"google_search() -> HTTP Status Code: {response.status_code}")
+        print(f"google_search() -> Response JSON (truncated): {str(response.json())[:500]}")
         
         results = []
         if 'items' in data:
+            print(f"google_search() -> Found {len(data['items'])} results.")
             for item in data['items']:
+                print(f"Title: {item.get('title', 'N/A')}")
+                print(f"Link: {item.get('link', 'N/A')}")
+                print(f"Snippet: {item.get('snippet', 'N/A')[:100]}...")
                 result = {
                     'title': item.get('title', ''),
                     'link': item.get('link', '')

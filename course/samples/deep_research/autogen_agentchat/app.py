@@ -16,12 +16,51 @@ from autogen_ext.models.openai import OpenAIChatCompletionClient
 from google_search import google_search_tool
 from fetch_webpage import fetch_webpage_tool
  
+import argparse
+import os
+
+import logging
+
+from autogen_core import TRACE_LOGGER_NAME
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(TRACE_LOGGER_NAME)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
 
 async def main() -> None:
+    print("main() -> started...")  # Track when main starts
+
     # Initialize the model client
-    model_client = OpenAIChatCompletionClient(
+    parser = argparse.ArgumentParser(description="Run an AI-powered research assistant with a selectable model.")
+    parser.add_argument("--model", type=str, default="gpt-4o", help="Specify the model to use (default: gpt-4o)")
+    parser.add_argument("--question",type=str)
+    args = parser.parse_args()
+
+    ### Model Selection Confirmation
+    print(f"main() -> Using model: {args.model}")
+    ###
+
+    if args.model == "deepseek-chat":
+      model_client = OpenAIChatCompletionClient(
+            model="deepseek-chat",
+            base_url="https://api.deepseek.com",
+            api_key=os.getenv("DeepSeek_API_KEY"),
+            model_capabilities={
+                "vision": True,
+                "function_calling": True, # function calling = tools (autogen)
+                "json_output": True,
+            },
+        )
+
+    if args.model == "gpt-4o":
+      model_client = OpenAIChatCompletionClient(
         model="gpt-4o", 
-    )
+      )
+
+    ### Research Question Input
+    print(f"main() -> Research Question: {args.question}")
+    ###
 
     # Create the Research Assistant agent
     research_assistant = AssistantAgent(
@@ -103,10 +142,11 @@ async def main() -> None:
         allow_repeated_speaker=True
     )
 
-    task = "There is a TV show that I watched a while ago. I forgot the name but I do remember what happened in one of the episodes. Can you help me find the name? Here is what I remember in one of the episodes: Two men play poker. One folds after another tells him to bet. The one who folded actually had a good hand and fell for the bluff. On the second hand, the same man folds again, but this time with a bad hand. A man gets locked in the room, and then his daughter knocks on the door. Two men go to a butcher shop, and one man brings a gift of vodka. Please browse the web deeply to find the TV show episode where this happened exactly" 
+    task = args.question
 
+
+    print("main() -> Running team chat stream...")
     await Console(team.run_stream(task=task))
-
-
+    print("main() -> Finished team chat stream.")
 
 asyncio.run(main())

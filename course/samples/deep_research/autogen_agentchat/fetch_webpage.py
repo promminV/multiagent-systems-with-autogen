@@ -6,14 +6,29 @@ from autogen_core.tools import FunctionTool
 from bs4 import BeautifulSoup
 import html2text
 from urllib.parse import urljoin 
+import argparse
 
+parser = argparse.ArgumentParser(description="Configure webpage fetching parameters.")
+parser.add_argument("--FETCH_INCLUDE_IMAGES", type=bool, default=True, help="Include image URLs in the extracted content (default: True).")
+parser.add_argument("--FETCH_MAX_LENGTH", type=int, default=None, help="Maximum length of extracted content (default: None).")
+args, _ = parser.parse_known_args()  # Allow arguments from other modules
 
 async def fetch_webpage(
     url: str,
-    include_images: bool = True,
-    max_length: Optional[int] = None,
+    include_images: bool = args.FETCH_INCLUDE_IMAGES,
+    max_length: Optional[int] = args.FETCH_MAX_LENGTH,
     headers: Optional[Dict[str, str]] = None
 ) -> str:
+
+    ### Print Before Performing Google Search
+    print(">>> fetch_webpage()")
+    print(f"url: {url}")
+    print(f"include_images: {include_images}")
+    print(f"max_length: {max_length}")
+    print(f"headers: {headers}")
+    print("----------------------------")
+    ###
+
     """Fetch a webpage and convert it to markdown format.
     
     Args:
