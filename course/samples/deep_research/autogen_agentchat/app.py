@@ -128,8 +128,10 @@ async def main() -> None:
                 ImportFromModule("urllib.parse", ["urljoin"])
             ]
         )
+        google_search_tool = forced_google_search_tool
+
         
-        if args.forced_fetch_webpage_params:
+    if args.forced_fetch_webpage_params:
             async def forced_fetch_webpage(
                 url: str,
                 include_images: bool = args.FETCH_INCLUDE_IMAGES,
@@ -161,12 +163,7 @@ async def main() -> None:
                     ImportFromModule("urllib.parse", ("urljoin",))
                 ]
             )
-
-        
-        
-        google_search_tool = forced_google_search_tool
-        fetch_webpage_tool = forced_fetch_webpage_tool
-
+            fetch_webpage_tool = forced_fetch_webpage_tool
             #####
 
 
