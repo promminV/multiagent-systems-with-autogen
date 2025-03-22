@@ -35,8 +35,8 @@ async def fetch_webpage(
     print(f"include image : {include_images}")
     print(f"max_length (by agent) : {max_length}")
     ####### Modified (Prommin) ########
-    max_length_manual = 10000
-    if max_length_manual != 0 : 
+    max_length_manual = -1
+    if max_length_manual != -1 : 
       max_length = max_length_manual 
       print(f"max_length (forced) : {max_length}")
     ###################################

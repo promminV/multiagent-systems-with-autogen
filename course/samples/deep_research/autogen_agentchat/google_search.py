@@ -52,8 +52,8 @@ async def google_search(
     ####### Modified (Prommin) ########
     
     #num_results = min(max(1, num_results), 3) # maximum = 10 
-    forced_num_results = 1
-    forced_content_max_length = 10000
+    forced_num_results = -1
+    forced_content_max_length = -1
 
     print("----------------------------")
     print("[debug] google_search()")
@@ -68,10 +68,10 @@ async def google_search(
     print(f"-> content_max_length: {content_max_length}")
     print("---------------")
     print("---forced configuration---")
-    if forced_num_results != 0:
+    if forced_num_results != -1:
       num_results = forced_num_results
       print(f"-> num_results (forced): {num_results}")
-    if forced_content_max_length != 0:
+    if forced_content_max_length != -1:
       content_max_length = forced_content_max_length
       print(f"-> content_max_length (forced): {content_max_length}")
     print("----------------------------")
