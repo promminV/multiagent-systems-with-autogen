@@ -73,7 +73,7 @@ async def main() -> None:
             model_info={
                 "family": "unknown",
                 "function_calling": True,
-                "json_output": True,
+                #"json_output": True,
                 "vision": True
             }
         )
