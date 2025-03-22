@@ -29,9 +29,16 @@ async def fetch_webpage(
         ValueError: If the URL is invalid or the page can't be fetched
     """
     # Use default headers if none provided
-
+    print("----------------------------")
+    print("[debug] fetch_webpage() -> ")
+    print(f"url : {url}")
+    print(f"include image : {include_images}")
+    print(f"max_length (by agent) : {max_length}")
     ####### Modified (Prommin) ########
-    max_length = 10000
+    max_length_manual = 10000
+    if max_length_manual != 0 : 
+      max_length = max_length_manual 
+      print(f"max_length (forced) : {max_length}")
     ###################################
 
     if headers is None:
@@ -72,12 +79,14 @@ async def fetch_webpage(
         # Trim if max_length is specified
         if max_length and len(markdown) > max_length:
             markdown = markdown[:max_length] + "\n...(truncated)"
-            
+        print("----------------------------")
         return markdown.strip()
         
     except requests.RequestException as e:
+        print(f"fetch_webpage() -> [debug] Fetch Error {str(e)}")
         raise ValueError(f"Failed to fetch webpage: {str(e)}")
     except Exception as e:
+        print(f"fetch_webpage() -> [debug] Fetch Error {str(e)}")
         raise ValueError(f"Error processing webpage: {str(e)}")
 
 # Create the webpage fetching tool

@@ -40,13 +40,14 @@ parser.add_argument("--question", type=str)
 args = parser.parse_args()
 
 async def main() -> None:
-    print("main() -> started...")  # Track when main starts
+    print("----------------------------")
+    print("[debug] main() -> started...")  # Track when main starts
 
     # Initialize the model client
 
 
     ### Model Selection Confirmation
-    print(f"main() -> Using model: {args.model}")
+    print(f"[debug] main() -> Using model: {args.model}")
     ###
 
     if args.model == "deepseek-chat":
@@ -68,7 +69,7 @@ async def main() -> None:
         raise ValueError(f"Unsupported model: {args.model}")
 
     ### Research Question Input
-    print(f"main() -> Research Question: {args.question}")
+    print(f"[debug] main() -> Research Question: {args.question}")
     ###
 
 

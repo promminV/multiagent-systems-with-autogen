@@ -8,9 +8,6 @@ from autogen_core.code_executor import ImportFromModule
 from autogen_core.tools import FunctionTool
 import argparse
 
-
-
-
 async def google_search(
     query: str,
     num_results: int = 5,
@@ -52,28 +49,39 @@ async def google_search(
         )
     
     num_results = min(max(1, num_results), 10) # maximum = 10 
-
     ####### Modified (Prommin) ########
-    num_results = 1
-    content_max_length = 10000
-    print("google_search()")
+    
+    #num_results = min(max(1, num_results), 3) # maximum = 10 
+    forced_num_results = 1
+    forced_content_max_length = 10000
+
+    print("----------------------------")
+    print("[debug] google_search()")
     print(f"-> query: {query}")
-    print(f"-> num_results: {num_results}")
+    print("---configured by agent---")
     print(f"-> include_snippets: {include_snippets}")
     print(f"-> include_content: {include_content}")
-    print(f"-> content_max_length: {content_max_length}")
     print(f"-> language: {language}")
     print(f"-> country: {language}")
-    print(f"-> safe search: {safe_search}")
+    print(f"-> safe search: {safe_search}") 
+    print(f"-> num_results: {num_results}")
+    print(f"-> content_max_length: {content_max_length}")
+    print("---------------")
+    print("---forced configuration---")
+    if forced_num_results != 0:
+      num_results = forced_num_results
+      print(f"-> num_results (forced): {num_results}")
+    if forced_content_max_length != 0:
+      content_max_length = forced_content_max_length
+      print(f"-> content_max_length (forced): {content_max_length}")
     print("----------------------------")
     ###
     ###################################
 
 
     async def fetch_page_content(url: str, max_length: Optional[int] = 50000) -> str:
-    
-        print(f"google_search() \
-                -> fetch_page_content() -> Fetching content from URL: {url}")
+        print("----------------------------")
+        print(f"[debug] google_search() -> fetch_page_content() -> Fetching content from URL: {url}")
       
         """Helper function to fetch and convert webpage content to markdown"""
         headers = {
@@ -81,7 +89,7 @@ async def google_search(
         }
 
         ####### Modified (Prommin) ########
-        max_length = 10000
+        #max_length = 10000
         ###################################
 
         try:
@@ -113,15 +121,14 @@ async def google_search(
             if max_length and len(markdown) > max_length:
                 markdown = markdown[:max_length] + "\n...(truncated)"
 
-            print(f"google_search() \
-                    -> fetch_page_content() -> Successfully fetched content from {url} (length: {len(markdown)})")
-    
+            print(f"google_search() -> fetch_page_content() -> Successfully fetched content from {url} (length: {len(markdown)})")
+            print("----------------------------")
             return markdown.strip()
             
         except Exception as e:
             ### Print If Content Fetching Fails
-            print(f"google_search() \
-                    -> fetch_page_content() -> Failed to fetch content for {url}: {str(e)}")
+            print(f"google_search() -> fetch_page_content() -> Failed to fetch content for {url}: {str(e)}")
+            print("----------------------------")
             ###
             return f"Error fetching content: {str(e)}"
 
@@ -140,7 +147,8 @@ async def google_search(
         params['gl'] = country
     
     try:
-        print('google_search() -> start request to google api...')
+        print("----------------------------")
+        print('[debug] google_search() -> start request to google api...')
         response = requests.get(
             'https://www.googleapis.com/customsearch/v1',
             params=params,
@@ -149,8 +157,8 @@ async def google_search(
         response.raise_for_status()
         data = response.json()
 
-        print(f"google_search() -> HTTP Status Code: {response.status_code}")
-        print(f"google_search() -> Response JSON (truncated): {str(response.json())[:500]}")
+        print(f"[debug] google_search() -> HTTP Status Code: {response.status_code}")
+        print(f"[debug] google_search() -> Response JSON (truncated): {str(response.json())[:500]}")
         
         results = []
         if 'items' in data:
@@ -173,14 +181,18 @@ async def google_search(
                     )
                     
                 results.append(result)
+        print("----------------------------")
                 
         return results
         
     except requests.RequestException as e:
+        print(f"[debug] google_search() -> Error to perform search: {str(e)}")
         raise ValueError(f"Failed to perform search: {str(e)}")
     except KeyError as e:
+        print(f"[debug] google_search() -> Error Invalid API response format: {str(e)}")
         raise ValueError(f"Invalid API response format: {str(e)}")
     except Exception as e:
+        print(f"[debug] google_search() -> Error during search: {str(e)}")
         raise ValueError(f"Error during search: {str(e)}")
 
 
