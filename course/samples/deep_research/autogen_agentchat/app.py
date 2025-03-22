@@ -67,16 +67,16 @@ async def main() -> None:
         )
     elif args.model == "gemini-2.0-flash-exp":
         model_client = OpenAIChatCompletionClient(
-        model="gemini-2.0-flash-exp",
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        api_key=os.environ.get("gemini_api_key"),
-        model_info={
-            "family": "unknown",
-            "function_calling": True,
-            "json_output": True,
-            "vision": True
-        }
-    )
+            model="gemini-2.0-flash-exp",
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            api_key=os.environ.get("gemini_api_key"),
+            model_info={
+                "family": "unknown",
+                "function_calling": True,
+                "json_output": True,
+                "vision": True
+            }
+        )
     else:
         raise ValueError(f"Unsupported model: {args.model}")
 
